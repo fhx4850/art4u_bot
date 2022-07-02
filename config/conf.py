@@ -11,6 +11,7 @@ class Env:
     TOKEN = os.getenv("BOT_TOKEN")
     ADMINS = [5572275744]
     IP = os.getenv("ip")
+    POSTS_PATH = os.getenv('path_to_posts_file')
 
 
 class ConfBot:

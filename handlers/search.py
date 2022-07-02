@@ -8,7 +8,7 @@ from keyboards.keyboard import search_btns, shownext_btns
 from handlers.start import start_bot
 from config.commands import CSearch
 from config.keys import KSearch
-# from utils.searchprocessing import SearchProcessing
+from utils.searchprocessing import SearchProcessing, SearchPost
 
 dp = ConfBot.DP
 
@@ -25,8 +25,12 @@ async def search(message: types.Message):
 async def test(message: types.Message, state: FSMContext):
     search_text = message.text
     await message.answer(f'Search ➡️ {search_text}', reply_markup=shownext_btns)
-    await state.update_data(search_text=search_text)
-    # SearchProcessing(search_text)
+
+    search_data = SearchProcessing(search_text).get_search_data()
+    urls = SearchPost(search_data).get_post()
+    # await message.answer(urls)
+    await state.update_data(urls=urls)
+    # await message.bot.send_photo(message.chat.id, url)
     await state.reset_state(with_data=False)
     await shownext(message, state)
 
@@ -39,10 +43,26 @@ async def stopsearch(message: types.Message):
 @dp.message_handler(Command(CSearch.shownext))
 async def shownext(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        search_text = data.get('search_text', None)
-    if not search_text:
+        urls = data.get('urls', None)
+    if not urls:
         await message.answer('No search query!')
         return
+    current_url = list()
+    for x, url in enumerate(urls):
+        if x == 5:
+            await __remove_send_url(current_url, urls, state)
+            return
+        else:
+            if url != 'nan':
+                await message.bot.send_photo(message.chat.id, url)
+                current_url.append(url)
+    await __remove_send_url(current_url, urls, state)
+
+
+async def __remove_send_url(current_url, urls, state):
+    for i in current_url:
+        urls.remove(i)
+    await state.update_data(urls=urls)
 
 
 @dp.message_handler(text=KSearch.show5)
