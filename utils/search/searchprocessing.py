@@ -1,9 +1,10 @@
 import json
 import pandas as pd
 from config.conf import Env
+from .interface import Filter
 
 
-class SearchProcessing:
+class ParsingSearchQuery:
     def __init__(self, search_text):
         self._search_text = str(search_text)
         self._last_index = 0
@@ -63,27 +64,56 @@ class SearchProcessing:
 
 class SearchPost:
     def __init__(self, search_data: dict):
-        self._ps = _PostData(Env.POSTS_PATH).get_data(title=search_data['body'])
+        self._ps = _PostDataFilter(Env.POSTS_PATH).get_data(title=search_data['body'])
 
     def get_post(self):
         return self._ps
 
 
-class _PostData:
+class _PostDataFilter(Filter):
     def __init__(self, path_to_file):
         self._path_to_file = path_to_file
         self._df_posts_data = self._open_sours_file()
 
     def _open_sours_file(self):
-        posts = None
         with open(self._path_to_file) as f:
             posts = json.load(f)
             df = pd.DataFrame(posts)
         return df
 
-    def get_data(self, **kwargs):
+    def get_data(self, *args, **kwargs):
         df = self._df_posts_data
         kk = list(kwargs.keys())[0]
         kv = list(kwargs.values())[0]
         df_filter = df[df[kk].str.contains(kv, case=False)]['cover_url'].values.tolist()
         return df_filter
+
+
+class SearchCategories:
+    def __init__(self, search_data):
+        self._ps = _CategoriesFilter(Env.CATEGORIES_PATH).get_data(search_data)
+
+    def get_data(self):
+        return self._ps
+
+
+class _CategoriesFilter(Filter):
+    def __init__(self, path_to_file):
+        self._path_to_file = path_to_file
+        self._categories_data = self._open_sours_file()
+        self._post_data_filter = _PostDataFilter(Env.POSTS_PATH)
+
+    def _open_sours_file(self):
+        with open(self._path_to_file) as f:
+            return json.load(f)
+
+    def get_data(self, *args, **kwargs):
+        cd = self._categories_data
+        for i in args:
+            hash_ids=cd[i]
+
+        urls = []
+
+        for hid in hash_ids:
+            urls.append(self._post_data_filter.get_data(hash_id=hid)[0])
+        return urls

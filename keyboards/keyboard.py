@@ -13,6 +13,7 @@ base_btns = ReplyKeyboardMarkup(
 
 search_btns = ReplyKeyboardMarkup(keyboard=[
     [
+        KeyboardButton(text=KSearch.stopsearch),
         KeyboardButton(text=KSearch.category)
     ]
 ],
@@ -25,6 +26,9 @@ shownext_btns = ReplyKeyboardMarkup(keyboard=[
         KeyboardButton(text=KSearch.stopsearch),
         KeyboardButton(text=KSearch.show5)
 
+    ],
+    [
+        KeyboardButton(text=KSearch.search)
     ]
 ],
     resize_keyboard=True,

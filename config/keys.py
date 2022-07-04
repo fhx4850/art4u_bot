@@ -3,3 +3,4 @@ class KSearch:
     stopsearch = '🛑 Stop search'
     show5 = '🌄 Show 5'
     category = '🔎 Search categories'
+    searchagain = '🔎 Search again'

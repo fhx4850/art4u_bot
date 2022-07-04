@@ -12,6 +12,7 @@ class Env:
     ADMINS = [5572275744]
     IP = os.getenv("ip")
     POSTS_PATH = os.getenv('path_to_posts_file')
+    CATEGORIES_PATH = os.getenv('path_to_categories_file')
 
 
 class ConfBot:
