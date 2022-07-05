@@ -117,3 +117,39 @@ class _CategoriesFilter(Filter):
         for hid in hash_ids:
             urls.append(self._post_data_filter.get_data(hash_id=hid)[0])
         return urls
+
+
+class SearchTags:
+    def __init__(self, search_data):
+        self._ps = _TagsFilter(Env.TAGS_PATH).get_data(search_data)
+
+    def get_data(self):
+        return self._ps
+
+
+class _TagsFilter(Filter):
+    def __init__(self, path_to_file):
+        self._path_to_file = path_to_file
+        self._tags_data = self._open_sours_file()
+        self._post_data_filter = _PostDataFilter(Env.POSTS_PATH)
+
+    def _open_sours_file(self):
+        with open(self._path_to_file) as f:
+            return json.load(f)
+
+    def get_data(self, *args, **kwargs):
+        t = args[0].split(',')
+        tags = [i.strip(' ') for i in t]
+        tags_pd_series = pd.Series(list(self._tags_data.keys()))
+        filter_tags = []
+        for i in tags:
+             filter_tags.append(tags_pd_series[tags_pd_series.str.contains(i, case=False)].tolist())
+        hid = []
+        for i in filter_tags[0]:
+            hid += [i for i in self._tags_data[i]]
+
+        urls = []
+        for h in hid:
+            urls.append(self._post_data_filter.get_data(hash_id=h)[0])
+
+        return urls

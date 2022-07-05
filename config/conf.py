@@ -13,6 +13,7 @@ class Env:
     IP = os.getenv("ip")
     POSTS_PATH = os.getenv('path_to_posts_file')
     CATEGORIES_PATH = os.getenv('path_to_categories_file')
+    TAGS_PATH = os.getenv('path_to_tags_file')
 
 
 class ConfBot:

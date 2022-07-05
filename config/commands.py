@@ -3,3 +3,4 @@ class CSearch:
     stopsearch = 'stopsearch'
     shownext = 'shownext'
     searchcategories = 'searchcategories'
+    tags = 'searchtags'
