@@ -6,6 +6,7 @@ from aiogram.dispatcher.filters.builtin import Command
 from states import SearchState, TagsState
 from utils.bot_commands import search_commands, pre_search_commands, set_custom_command
 from keyboards.keyboard import search_btns, shownext_btns
+from keyboards.inline import inline_url_post_btn
 from handlers.start import start_bot
 from config.commands import CSearch
 from config.keys import KSearch
@@ -36,7 +37,6 @@ async def search_input(message: types.Message, state: FSMContext):
 
     search_data = ParsingSearchQuery(search_text).get_search_data()
     urls = SearchPost(search_data).get_post()
-
     await state.update_data(urls=urls)
     await state.reset_state(with_data=False)
     await shownext(message, state)
@@ -81,7 +81,7 @@ async def shownext(message: types.Message, state: FSMContext):
             return
         else:
             try:
-                await message.bot.send_photo(message.chat.id, url)
+                await message.bot.send_photo(message.chat.id, url[0], reply_markup=inline_url_post_btn(url[2], url[1]))
             except Exception as ex:
                 print(ex)
             current_url.append(url)

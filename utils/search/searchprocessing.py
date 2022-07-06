@@ -85,7 +85,10 @@ class _PostDataFilter(Filter):
         df = self._df_posts_data
         kk = list(kwargs.keys())[0]
         kv = list(kwargs.values())[0]
-        df_filter = df[df[kk].str.contains(kv, case=False)]['cover_url'].values.tolist()
+        df_filter = df[df[kk].str.contains(kv, case=False)][['cover_url', 'permalink', 'title']].values.tolist()
+        # test = df[df[kk].str.contains(kv, case=False)]
+        # print(test)
+        # print(df_filter)
         return df_filter
 
 
