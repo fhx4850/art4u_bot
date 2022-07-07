@@ -14,44 +14,44 @@ class ParsingSearchQuery:
 
     def _parse_query(self):
         query_format = self._search_text.replace(' ', '')
-        if self._search_text.startswith('!'):
-            self.__execute_categories(query_format)
+        if self._search_text.startswith('#-'):
             self.__execute_tags(query_format)
+            self.__execute_body(query_format)
+        elif self._search_text.startswith('@-'):
+            self.__execute_categories(query_format)
             self.__execute_body(query_format)
         else:
             self.__execute_body(query_format)
 
     def __execute_categories(self, query_format):
-        if query_format.find('categories:') != -1:
+        if query_format.find('@-') != -1:
             categories_text = ''
-            categories_start_index = query_format.find('categories:').as_integer_ratio()[0]
+            categories_start_index = query_format.find('@-').as_integer_ratio()[0]
             for x, i in enumerate(query_format):
                 if x >= categories_start_index:
-                    if i == ';':
+                    if i == '/':
                         self._last_index = x+1
                         break
                     else:
                         categories_text += i
-            c = categories_text.split(':')
+            c = categories_text.split('-')
             categories = c[1].split(',')
             self._categories = categories
-            print(categories)
 
     def __execute_tags(self, query_format):
         tags_text = ''
-        if query_format.find('tags:') != -1:
-            tags_start_index = query_format.find('tags:').as_integer_ratio()[0]
+        if query_format.find('#-') != -1:
+            tags_start_index = query_format.find('#-').as_integer_ratio()[0]
             for x, i in enumerate(query_format):
                 if x > tags_start_index:
-                    if i == ';':
+                    if i == '/':
                         self._last_index = x+1
                         break
                     else:
                         tags_text += i
-            t = tags_text.split(':')
+            t = tags_text.split('-')
             tags = t[1].split(',')
             self._tags = tags
-            print(tags)
 
     def __execute_body(self, query_format):
         body = query_format[self._last_index::]
@@ -86,9 +86,6 @@ class _PostDataFilter(Filter):
         kk = list(kwargs.keys())[0]
         kv = list(kwargs.values())[0]
         df_filter = df[df[kk].str.contains(kv, case=False)][['cover_url', 'permalink', 'title']].values.tolist()
-        # test = df[df[kk].str.contains(kv, case=False)]
-        # print(test)
-        # print(df_filter)
         return df_filter
 
 
@@ -140,8 +137,9 @@ class _TagsFilter(Filter):
         with open(self._path_to_file) as f:
             return json.load(f)
 
-    def get_data(self, *args, **kwargs):
-        t = args[0].split(',')
+    def get_data(self, *args: list, **kwargs):
+        for i in args[0]:
+            t = i.split(',')
         tags = [i.strip(' ') for i in t]
         tags_pd_series = pd.Series(list(self._tags_data.keys()))
         filter_tags = []
@@ -156,3 +154,34 @@ class _TagsFilter(Filter):
             urls.append(self._post_data_filter.get_data(hash_id=h)[0])
 
         return urls
+
+
+class SearchQuery:
+    def __init__(self, search_data):
+        self._ps = _SearchQueryFilter(Env.TAGS_PATH).get_data(search_data)
+
+    def get_data(self):
+        return self._ps
+
+
+class _SearchQueryFilter(Filter):
+    def __init__(self, path_to_file):
+        self._path_to_file = path_to_file
+        self._tags_data = self._open_sours_file()
+        self._post_data_filter = _PostDataFilter(Env.POSTS_PATH)
+
+    def _open_sours_file(self):
+        with open(self._path_to_file) as f:
+            return json.load(f)
+
+    def get_data(self, *args, **kwargs):
+        if args[0]['tags']:
+            tags_titles = [i[2] for i in SearchTags(args[0]['tags']).get_data()]
+            posts = SearchPost(args[0]).get_post()
+            urls = []
+            for post in posts:
+                if post[2] in tags_titles:
+                    urls.append(post)
+            return urls
+        else:
+            return SearchPost(args[0]).get_post()

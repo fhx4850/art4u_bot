@@ -10,7 +10,7 @@ from keyboards.inline import inline_url_post_btn
 from handlers.start import start_bot
 from config.commands import CSearch
 from config.keys import KSearch
-from utils.search.searchprocessing import ParsingSearchQuery, SearchPost, SearchCategories, SearchTags
+from utils.search.searchprocessing import ParsingSearchQuery, SearchCategories, SearchTags, SearchQuery
 from config.text import SearchText
 from utils.search.categoriesprocessing import Categories
 
@@ -36,7 +36,7 @@ async def search_input(message: types.Message, state: FSMContext):
     await state.reset_data()
 
     search_data = ParsingSearchQuery(search_text).get_search_data()
-    urls = SearchPost(search_data).get_post()
+    urls = SearchQuery(search_data).get_data()
     await state.update_data(urls=urls)
     await state.reset_state(with_data=False)
     await shownext(message, state)
@@ -144,7 +144,7 @@ async def tags_input(message: types.Message, state: FSMContext):
     await state.reset_data()
 
     await message.answer(f'Search tags ➡ {message.text}', reply_markup=shownext_btns)
-    urls = SearchTags(message.text).get_data()
+    urls = SearchTags([message.text]).get_data()
     await state.update_data(urls=urls)
     await state.reset_state(with_data=False)
     await shownext(message, state)
