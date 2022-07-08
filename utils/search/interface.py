@@ -7,5 +7,15 @@ class Filter(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_data(self, *args, **kwargs):
+    def get_filtered_data(self):
+        pass
+
+    @abstractmethod
+    def filter(self, search_data):
+        pass
+
+
+class Search(metaclass=ABCMeta):
+    @abstractmethod
+    def get_data(self):
         pass

@@ -1,24 +1,30 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
 from config.conf import ConfBot
 from aiogram.dispatcher.filters.builtin import Command
-from states import SearchState, TagsState
-from utils.bot_commands import search_commands, pre_search_commands, set_custom_command
-from keyboards.keyboard import search_btns, shownext_btns
+from states import SearchState
+from utils.bot_commands import search_commands, pre_search_commands
+from keyboards.default.keyboard import search_btns, shownext_btns
 from keyboards.inline import inline_url_post_btn
 from handlers.start import start_bot
 from config.commands import CSearch
 from config.keys import KSearch
-from utils.search.searchprocessing import ParsingSearchQuery, SearchCategories, SearchTags, SearchQuery
-from config.text import SearchText
-from utils.search.categoriesprocessing import Categories
+from utils.search.type import SearchQuery
+from utils.search.processing import ParsingSearchQuery, Categories
+from . import categories
+from . import tags
 
 dp = ConfBot.DP
 
 
 @dp.message_handler(Command(CSearch.search))
 async def search(message: types.Message):
+    """
+    Processing the search start command.
+
+    :param message:
+    :return:
+    """
     await pre_search_commands(dp)
     await message.answer('Search...', reply_markup=search_btns)
     await SearchState.s_text.set()
@@ -27,6 +33,13 @@ async def search(message: types.Message):
 
 @dp.message_handler(state=SearchState.s_text)
 async def search_input(message: types.Message, state: FSMContext):
+    """
+    The handler expects a message with text to search from the user.
+
+    :param message:
+    :param state:
+    :return:
+    """
     await search_commands(dp)
     if await __check_stop_search_input(message, state):
         return
@@ -43,10 +56,17 @@ async def search_input(message: types.Message, state: FSMContext):
 
 
 async def __check_stop_search_input(message: types.Message, state):
+    """
+    Checking if the search should be stopped.
+
+    :param message:
+    :param state:
+    :return:
+    """
     isstop = False
     if message.text == KSearch.category or message.text == '/' + CSearch.searchcategories:
         await state.reset_state()
-        await show_categories_list(message)
+        await categories.show_categories_list(message)
         isstop = True
 
     if message.text == KSearch.stopsearch or message.text == '/' + CSearch.stopsearch:
@@ -55,10 +75,20 @@ async def __check_stop_search_input(message: types.Message, state):
         isstop = True
 
     if message.text == KSearch.tags or message.text == '/' + CSearch.tags:
-        await search_tags(message)
+        await tags.search_tags(message)
         isstop = True
 
     return isstop
+
+
+@dp.message_handler(text=KSearch.stopsearch)
+async def stopsearch_btn_click(message: types.Message):
+    await stopsearch(message)
+
+
+@dp.message_handler(text=KSearch.search)
+async def search_btn_click(message: types.Message):
+    await search(message)
 
 
 @dp.message_handler(Command(CSearch.stopsearch))
@@ -68,6 +98,13 @@ async def stopsearch(message: types.Message):
 
 @dp.message_handler(Command(CSearch.shownext))
 async def shownext(message: types.Message, state: FSMContext):
+    """
+    Sends messages with the following posts.
+
+    :param message:
+    :param state:
+    :return:
+    """
     await search_commands(dp)
     async with state.proxy() as data:
         urls = data.get('urls', None)
@@ -97,54 +134,4 @@ async def __remove_send_url(current_url, urls, state):
 @dp.message_handler(text=KSearch.show5)
 async def shownext_btn(message: types.Message, state: FSMContext):
     await message.delete()
-    await shownext(message, state)
-
-categories_names_command = Categories().get_categories_names_command()
-categories_names = Categories().get_categories_names()
-
-
-@dp.message_handler(text=CSearch.searchcategories)
-async def show_categories_list(message: types.Message):
-    await message.answer(SearchText().get_text())
-    await set_custom_command(dp, categories_names_command)
-
-
-@dp.message_handler(text=KSearch.category)
-async def show_categories_btn(message: types.Message):
-    await show_categories_list(message)
-
-
-@dp.message_handler(Text(equals=categories_names_command))
-async def catch_category(message: types.Message, state: FSMContext):
-    await message.answer(message.text, reply_markup=shownext_btns)
-    category_index = categories_names_command.index(message.text)
-    category_name = categories_names[category_index]
-
-    urls = SearchCategories(category_name).get_data()
-    await state.update_data(urls=urls)
-    await state.reset_state(with_data=False)
-    await shownext(message, state)
-
-
-@dp.message_handler(text=KSearch.tags)
-async def search_tags_btn(message: types.Message):
-    await search_tags(message)
-
-
-@dp.message_handler(Command(CSearch.tags))
-async def search_tags(message: types.Message):
-    await SearchState.s_tags.set()
-    await message.answer('Search posts by tags...')
-
-
-@dp.message_handler(state=SearchState.s_tags)
-async def tags_input(message: types.Message, state: FSMContext):
-    if await __check_stop_search_input(message, state):
-        return
-    await state.reset_data()
-
-    await message.answer(f'Search tags ➡ {message.text}', reply_markup=shownext_btns)
-    urls = SearchTags([message.text]).get_data()
-    await state.update_data(urls=urls)
-    await state.reset_state(with_data=False)
     await shownext(message, state)

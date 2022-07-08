@@ -1,5 +1,4 @@
 from aiogram import Dispatcher
-from config.conf import Env
 from .bot_commands import set_default_commands
 import middlewares
 

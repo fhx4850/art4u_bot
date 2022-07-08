@@ -1,3 +1,5 @@
+# This file contains commands for handlers.
+
 class CSearch:
     search = 'search'
     stopsearch = 'stopsearch'

@@ -1,4 +1,6 @@
-from utils.search.categoriesprocessing import Categories
+# This file contains texts for output.
+
+from utils.search.processing import Categories
 
 
 class SearchText:

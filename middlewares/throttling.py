@@ -2,7 +2,6 @@ import asyncio
 
 from aiogram import types, Dispatcher
 from config.conf import ConfBot
-# from aiogram.dispatcher import DEFAULT_RATE_LIMIT
 from aiogram.dispatcher.handler import CancelHandler, current_handler
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils.exceptions import Throttled
@@ -46,5 +45,3 @@ class ThrottlingMiddleware(BaseMiddleware):
             await message.reply('Too many requests! ')
         await asyncio.sleep(delta)
         thr = await dispatcher.check_key(key)
-        # if thr.exceeded_count == throttled.exceeded_count:
-        #     await message.reply('Unlocked.')

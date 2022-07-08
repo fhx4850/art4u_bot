@@ -1,3 +1,5 @@
+# This file contains the names for the buttons.
+
 class KSearch:
     search = '🔎 Search'
     stopsearch = '🛑 Stop search'
